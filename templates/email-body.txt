@@ -1,0 +1,11 @@
+ESHGHAM workflow report: {{ result_type }}
+
+{% if workflows %}
+Workflows ({{ workflows | length }}):
+{% for workflow in workflows -%}
+- {{ workflow.repo }} :: {{ workflow.workflow_name }}
+  {{ workflow.url }}
+{% endfor %}
+{% else %}
+No workflows reported for this status.
+{% endif %}

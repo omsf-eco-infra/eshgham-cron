@@ -1,0 +1,21 @@
+# eshgham config
+config.yaml
+
+# pixi environments
+.pixi/*
+!.pixi/config.toml
+
+# Terraform local/state artifacts
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.auto.tfvars
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc

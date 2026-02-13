@@ -1,0 +1,18 @@
+<html>
+  <body>
+    <h2>ESHGHAM workflow report: {{ result_type }}</h2>
+    {% if workflows %}
+    <p>Workflows ({{ workflows | length }}):</p>
+    <ul>
+      {% for workflow in workflows %}
+      <li>
+        <strong>{{ workflow.repo }}</strong> :: {{ workflow.workflow_name }}<br />
+        <a href="{{ workflow.url }}">{{ workflow.url }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p>No workflows reported for this status.</p>
+    {% endif %}
+  </body>
+</html>
