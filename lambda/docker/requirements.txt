@@ -1,5 +1,5 @@
 boto3==1.42.39
-cloud-cron @ https://github.com/omsf-eco-infra/cloud-cron/archive/refs/heads/main.tar.gz
+lambdacron @ https://github.com/omsf/lambdacron/archive/refs/heads/main.tar.gz
 colorama==0.4.6
 eshgham==0.4.0
 Jinja2==3.1.6

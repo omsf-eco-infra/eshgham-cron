@@ -31,7 +31,7 @@ provider "aws" {
 }
 
 module "lambda_image_republish" {
-  source = "../cloud-cron/modules/lambda-image-republish"
+  source = "git::https://github.com/omsf/lambdacron.git//modules/lambda-image-republish"
 
   source_lambda_repo = var.lambda_public_repo_url
   source_lambda_tag  = var.lambda_public_tag
@@ -44,7 +44,7 @@ module "lambda_image_republish" {
 }
 
 module "notification_image_republish" {
-  source = "../cloud-cron/modules/lambda-image-republish"
+  source = "git::https://github.com/omsf/lambdacron.git//modules/lambda-image-republish"
 
   source_lambda_repo = var.notification_public_repo_url
   source_lambda_tag  = var.notification_public_tag
@@ -57,7 +57,7 @@ module "notification_image_republish" {
 }
 
 module "cloud_cron" {
-  source = "../cloud-cron"
+  source = "git::https://github.com/omsf/lambdacron.git"
 
   aws_region        = var.aws_region
   lambda_image_uri    = module.lambda_image_republish.lambda_image_uri
@@ -78,7 +78,7 @@ module "cloud_cron" {
 
 module "email_notification" {
   count  = local.enable_email_notification ? 1 : 0
-  source = "../cloud-cron/modules/email-notification"
+  source = "git::https://github.com/omsf/lambdacron.git//modules/email-notification"
 
   sns_topic_arn     = module.cloud_cron.sns_topic_arn
   result_types      = var.email_result_types
@@ -92,6 +92,23 @@ module "email_notification" {
   sender                = var.email_sender
   recipients            = var.email_recipients
   reply_to              = var.email_reply_to
+
+  timeout     = var.email_timeout
+  memory_size = var.email_memory_size
+  batch_size  = var.email_batch_size
+  enabled     = var.email_enabled
+
+  tags = local.tags
+}
+
+module "print_notification" {
+  source = "git::https://github.com/omsf/lambdacron.git//modules/print-notification"
+
+  sns_topic_arn    = module.cloud_cron.sns_topic_arn
+  result_types     = var.email_result_types
+  fifo_queue_name  = "${trimsuffix(var.email_fifo_queue_name, ".fifo")}-print.fifo"
+  lambda_image_uri = module.notification_image_republish.lambda_image_uri
+  template_file    = var.email_text_template_file
 
   timeout     = var.email_timeout
   memory_size = var.email_memory_size

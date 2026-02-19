@@ -5,8 +5,10 @@ from typing import Any
 
 import github
 import yaml
-from cloud_cron.lambda_task import CronLambdaTask
+from lambdacron.lambda_task import CronLambdaTask
 from eshgham import Harness, Outputter, Status, get_token, make_json_ready
+
+logging.basicConfig(level=logging.INFO)
 
 
 class _SilentOutputter(Outputter):
@@ -25,24 +27,29 @@ def _load_workflow_config() -> dict[str, list[str]]:
 
 class EshghamCronTask(CronLambdaTask):
     def _perform_task(self, event, context):
-        workflow_dict = _load_workflow_config()
-        token = get_token(None, workflow_dict)
-        gh = github.Github(token)
+        logger = logging.getLogger(self.__class__.__name__)
+        try:
+            workflow_dict = _load_workflow_config()
+            token = get_token(None, workflow_dict)
+            gh = github.Github(token)
 
-        runner = Harness(_SilentOutputter())
-        sorted_results = runner(gh, workflow_dict)
+            runner = Harness(_SilentOutputter())
+            sorted_results = runner(gh, workflow_dict)
 
-        json_ready = make_json_ready(sorted_results)
-        result_payload = {
-            status: {"workflows": workflows}
-            for status, workflows in json_ready.items()
-            if workflows
-        }
-        logging.getLogger(self.__class__.__name__).info(
-            "eshgham_run_summary",
-            extra={"summary": json.dumps(result_payload)},
-        )
-        return result_payload
+            json_ready = make_json_ready(sorted_results)
+            result_payload = {
+                status: {"workflows": workflows}
+                for status, workflows in json_ready.items()
+                if workflows
+            }
+            logger.info(
+                "eshgham_run_summary",
+                extra={"summary": json.dumps(result_payload)},
+            )
+            return result_payload
+        except Exception as exc:
+            logger.exception("eshgham_run_exception")
+            return {"FAILED": {"workflows": [], "error": str(exc)}}
 
 
 task = EshghamCronTask()

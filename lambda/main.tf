@@ -9,7 +9,7 @@ provider "aws" {
 }
 
 module "lambda_image_public" {
-  source = "../../cloud-cron/modules/lambda-image-public"
+  source = "git::https://github.com/omsf/lambdacron.git//modules/lambda-image-public"
 
   providers = {
     aws = aws.use1
