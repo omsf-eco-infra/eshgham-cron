@@ -1,12 +1,18 @@
 locals {
   tags = merge({ managed_by = "eshgham-cron" }, var.tags)
   enable_email_notification = length(var.email_recipients) > 0
+  default_email_subject_template_file = "${path.module}/templates/email-subject.txt"
+  default_email_text_template_file    = "${path.module}/templates/email-body.txt"
+  default_email_html_template_file    = "${path.module}/templates/email-body.html"
+  email_subject_template_file         = length(var.email_subject_template_file) > 0 ? var.email_subject_template_file : local.default_email_subject_template_file
+  email_text_template_file            = length(var.email_text_template_file) > 0 ? var.email_text_template_file : local.default_email_text_template_file
+  email_html_template_file            = length(var.email_html_template_file) > 0 ? var.email_html_template_file : local.default_email_html_template_file
   eshgham_env = length(var.eshgham_config_file) > 0 ? {
     ESHGHAM_WORKFLOWS_YAML = file(var.eshgham_config_file)
   } : {}
-  github_env = length(var.github_token) > 0 ? {
+  github_env = {
     GITHUB_TOKEN = var.github_token
-  } : {}
+  }
   lambda_env = merge(var.lambda_env, local.eshgham_env, local.github_env)
 }
 
@@ -16,13 +22,13 @@ check "email_notification_inputs" {
       !local.enable_email_notification
       || (
         length(var.email_fifo_queue_name) > 0
-        && length(var.email_subject_template_file) > 0
-        && length(var.email_text_template_file) > 0
-        && length(var.email_html_template_file) > 0
+        && length(local.email_subject_template_file) > 0
+        && length(local.email_text_template_file) > 0
+        && length(local.email_html_template_file) > 0
         && length(var.email_sender) > 0
       )
     )
-    error_message = "When email_recipients is non-empty, email_fifo_queue_name, email_subject_template_file, email_text_template_file, email_html_template_file, and email_sender must be set."
+    error_message = "When email_recipients is non-empty, email_fifo_queue_name and email_sender must be set. Template files default to module templates unless explicitly overridden."
   }
 }
 
@@ -86,9 +92,9 @@ module "email_notification" {
   lambda_image_uri  = module.notification_image_republish.lambda_image_uri
   lambda_name       = var.email_lambda_name
 
-  subject_template_file = var.email_subject_template_file
-  text_template_file    = var.email_text_template_file
-  html_template_file    = var.email_html_template_file
+  subject_template_file = local.email_subject_template_file
+  text_template_file    = local.email_text_template_file
+  html_template_file    = local.email_html_template_file
   sender                = var.email_sender
   recipients            = var.email_recipients
   reply_to              = var.email_reply_to
@@ -108,7 +114,7 @@ module "print_notification" {
   result_types     = var.email_result_types
   fifo_queue_name  = "${trimsuffix(var.email_fifo_queue_name, ".fifo")}-print.fifo"
   lambda_image_uri = module.notification_image_republish.lambda_image_uri
-  template_file    = var.email_text_template_file
+  template_file    = local.email_text_template_file
 
   timeout     = var.email_timeout
   memory_size = var.email_memory_size

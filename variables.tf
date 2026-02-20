@@ -35,14 +35,17 @@ variable "lambda_env" {
 variable "eshgham_config_file" {
   description = "Path to the ESHGHAM workflows YAML file to load into ESHGHAM_WORKFLOWS_YAML."
   type        = string
-  default     = ""
 }
 
 variable "github_token" {
   description = "GitHub token to set as GITHUB_TOKEN for the scheduled Lambda."
   type        = string
-  default     = ""
   sensitive   = true
+
+  validation {
+    condition     = length(trimspace(var.github_token)) > 0
+    error_message = "github_token must be a non-empty token value."
+  }
 }
 
 variable "lambda_timeout" {
@@ -89,7 +92,7 @@ variable "lambda_public_tag" {
 variable "lambda_private_repository_name" {
   description = "Optional name for the private ECR repository that stores the republished ESHGHAM image."
   type        = string
-  default     = null
+  default     = "eshgham-local-deploy"
 }
 
 variable "lambda_enable_kms_encryption" {
@@ -119,7 +122,7 @@ variable "notification_public_tag" {
 variable "notification_private_repository_name" {
   description = "Optional name for the private ECR repository that stores the republished notification image."
   type        = string
-  default     = null
+  default     = "eshgham-notification-local"
 }
 
 variable "notification_enable_kms_encryption" {
@@ -143,7 +146,7 @@ variable "email_result_types" {
 variable "email_fifo_queue_name" {
   description = "Name for the FIFO SQS queue feeding the email notifier. Must end with .fifo."
   type        = string
-  default     = ""
+  default     = "eshgham-email.fifo"
 }
 
 variable "email_subject_template_file" {
@@ -185,7 +188,7 @@ variable "email_reply_to" {
 variable "email_lambda_name" {
   description = "Optional name for the email notification Lambda."
   type        = string
-  default     = null
+  default     = "eshgham-email-notifier"
 }
 
 variable "email_timeout" {
