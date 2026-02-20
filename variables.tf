@@ -135,7 +135,7 @@ variable "notification_kms_key_arn" {
 }
 
 variable "email_result_types" {
-  description = "Result types to subscribe to; empty means all."
+  description = "Result types to subscribe to; empty means all. Supports both base statuses (e.g. FAILED) and grouped categories (ACTION_NEEDED, WARNINGS, ALL_ABNORMAL)."
   type        = list(string)
   default     = []
 }

@@ -6,9 +6,22 @@ from typing import Any
 import github
 import yaml
 from lambdacron.lambda_task import CronLambdaTask
-from eshgham import Harness, Outputter, Status, get_token, make_json_ready
+from eshgham import Harness, Outputter, get_token, make_json_ready
 
 logging.basicConfig(level=logging.INFO)
+
+RESULT_TYPE_GROUPS: dict[str, tuple[str, ...]] = {
+    "ACTION_NEEDED": ("FAILED", "INACTIVATED"),
+    # Keep both spellings to tolerate upstream naming drift.
+    "WARNINGS": ("REENABLED", "REACTIVATED", "NO_SCHEDULED_RUNS"),
+    "ALL_ABNORMAL": (
+        "FAILED",
+        "INACTIVATED",
+        "REENABLED",
+        "REACTIVATED",
+        "NO_SCHEDULED_RUNS",
+    ),
+}
 
 
 class _SilentOutputter(Outputter):
@@ -25,6 +38,35 @@ def _load_workflow_config() -> dict[str, list[str]]:
     return workflow_dict
 
 
+def _collect_non_empty_workflows_by_status(
+    json_ready: dict[str, list[dict[str, Any]]], statuses: tuple[str, ...]
+) -> dict[str, list[dict[str, Any]]]:
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for status in statuses:
+        workflows = json_ready.get(status) or []
+        if workflows:
+            grouped[status] = workflows
+    return grouped
+
+
+def _build_result_payload(
+    json_ready: dict[str, list[dict[str, Any]]],
+) -> dict[str, dict[str, Any]]:
+    result_payload: dict[str, dict[str, Any]] = {}
+
+    # Keep single-status result types so existing subscriptions continue working.
+    for status, workflows in json_ready.items():
+        if workflows:
+            result_payload[status] = {status: workflows}
+
+    for result_type, statuses in RESULT_TYPE_GROUPS.items():
+        grouped = _collect_non_empty_workflows_by_status(json_ready, statuses)
+        if grouped:
+            result_payload[result_type] = grouped
+
+    return result_payload
+
+
 class EshghamCronTask(CronLambdaTask):
     def _perform_task(self, event, context):
         logger = logging.getLogger(self.__class__.__name__)
@@ -37,11 +79,7 @@ class EshghamCronTask(CronLambdaTask):
             sorted_results = runner(gh, workflow_dict)
 
             json_ready = make_json_ready(sorted_results)
-            result_payload = {
-                status: {"workflows": workflows}
-                for status, workflows in json_ready.items()
-                if workflows
-            }
+            result_payload = _build_result_payload(json_ready)
             logger.info(
                 "eshgham_run_summary",
                 extra={"summary": json.dumps(result_payload)},
@@ -49,7 +87,12 @@ class EshghamCronTask(CronLambdaTask):
             return result_payload
         except Exception as exc:
             logger.exception("eshgham_run_exception")
-            return {"FAILED": {"workflows": [], "error": str(exc)}}
+            error_payload = {"FAILED": [], "error": str(exc)}
+            return {
+                "FAILED": dict(error_payload),
+                "ACTION_NEEDED": dict(error_payload),
+                "ALL_ABNORMAL": dict(error_payload),
+            }
 
 
 task = EshghamCronTask()
