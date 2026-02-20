@@ -60,7 +60,7 @@ module "cloud_cron" {
   source = "git::https://github.com/omsf/lambdacron.git"
 
   aws_region        = var.aws_region
-  lambda_image_uri    = module.lambda_image_republish.lambda_image_uri
+  lambda_image_uri    = module.lambda_image_republish.lambda_image_uri_with_digest
   schedule_expression = var.schedule_expression
   topic_name          = var.topic_name
   fifo_topic          = var.fifo_topic
@@ -83,7 +83,7 @@ module "email_notification" {
   sns_topic_arn     = module.cloud_cron.sns_topic_arn
   result_types      = var.email_result_types
   fifo_queue_name   = var.email_fifo_queue_name
-  lambda_image_uri  = module.notification_image_republish.lambda_image_uri
+  lambda_image_uri  = module.notification_image_republish.lambda_image_uri_with_digest
   lambda_name       = var.email_lambda_name
 
   subject_template_file = var.email_subject_template_file
@@ -107,7 +107,7 @@ module "print_notification" {
   sns_topic_arn    = module.cloud_cron.sns_topic_arn
   result_types     = var.email_result_types
   fifo_queue_name  = "${trimsuffix(var.email_fifo_queue_name, ".fifo")}-print.fifo"
-  lambda_image_uri = module.notification_image_republish.lambda_image_uri
+  lambda_image_uri = module.notification_image_republish.lambda_image_uri_with_digest
   template_file    = var.email_text_template_file
 
   timeout     = var.email_timeout
