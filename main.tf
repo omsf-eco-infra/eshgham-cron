@@ -19,22 +19,6 @@ locals {
   lambda_env = merge(var.lambda_env, local.eshgham_env, local.github_env)
 }
 
-check "email_notification_inputs" {
-  assert {
-    condition = (
-      !local.enable_email_notification
-      || (
-        length(var.email_fifo_queue_name) > 0
-        && length(local.email_subject_template_file) > 0
-        && length(local.email_text_template_file) > 0
-        && length(local.email_html_template_file) > 0
-        && length(var.email_sender) > 0
-      )
-    )
-    error_message = "When email_recipients is non-empty, email_fifo_queue_name and email_sender must be set. Template files default to module templates unless explicitly overridden."
-  }
-}
-
 provider "aws" {
   region = var.aws_region
 }
