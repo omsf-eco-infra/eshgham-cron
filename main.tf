@@ -60,11 +60,11 @@ module "notification_image_republish" {
 module "cloud_cron" {
   source = "git::https://github.com/omsf/lambdacron.git"
 
-  aws_region                  = var.aws_region
-  lambda_image_uri            = module.lambda_image_republish.lambda_image_uri
-  schedule_expression         = var.schedule_expression
-  topic_name                  = var.topic_name
-  fifo_topic                  = var.fifo_topic
+  aws_region        = var.aws_region
+  lambda_image_uri    = module.lambda_image_republish.lambda_image_uri_with_digest
+  schedule_expression = var.schedule_expression
+  topic_name          = var.topic_name
+  fifo_topic          = var.fifo_topic
   content_based_deduplication = var.content_based_deduplication
 
   lambda_env      = local.lambda_env
