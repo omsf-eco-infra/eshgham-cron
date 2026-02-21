@@ -119,6 +119,17 @@ variable "notification_public_tag" {
   default     = "latest"
 }
 
+variable "notification_image_uri_override" {
+  description = "Optional full image URI for notification lambdas. When set, republish is skipped and this image is used directly."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.notification_image_uri_override == null || length(trimspace(var.notification_image_uri_override)) > 0
+    error_message = "notification_image_uri_override must be null or a non-empty image URI."
+  }
+}
+
 variable "notification_private_repository_name" {
   description = "Optional name for the private ECR repository that stores the republished notification image."
   type        = string
