@@ -10,13 +10,20 @@ locals {
   email_subject_template_file         = length(var.email_subject_template_file) > 0 ? var.email_subject_template_file : local.default_email_subject_template_file
   email_text_template_file            = length(var.email_text_template_file) > 0 ? var.email_text_template_file : local.default_email_text_template_file
   email_html_template_file            = length(var.email_html_template_file) > 0 ? var.email_html_template_file : local.default_email_html_template_file
-  eshgham_env = length(var.eshgham_config_file) > 0 ? {
+  eshgham_env = {
     ESHGHAM_WORKFLOWS_YAML = file(var.eshgham_config_file)
-  } : {}
+  }
   github_env = {
     GITHUB_TOKEN = var.github_token
   }
   lambda_env = merge(var.lambda_env, local.eshgham_env, local.github_env)
+}
+
+check "email_notification_sender_required" {
+  assert {
+    condition     = !local.enable_email_notification || length(trimspace(var.email_sender)) > 0
+    error_message = "email_sender must be non-empty when email_recipients is non-empty."
+  }
 }
 
 provider "aws" {

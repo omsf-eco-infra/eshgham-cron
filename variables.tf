@@ -158,6 +158,11 @@ variable "email_fifo_queue_name" {
   description = "Name for the FIFO SQS queue feeding the email notifier. Must end with .fifo."
   type        = string
   default     = "eshgham-email.fifo"
+
+  validation {
+    condition     = endswith(var.email_fifo_queue_name, ".fifo")
+    error_message = "email_fifo_queue_name must end with .fifo to be a valid FIFO SQS queue name."
+  }
 }
 
 variable "email_subject_template_file" {
