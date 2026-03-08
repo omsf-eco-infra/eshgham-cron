@@ -125,7 +125,7 @@ variable "notification_image_uri_override" {
   default     = null
 
   validation {
-    condition     = var.notification_image_uri_override == null || length(trimspace(var.notification_image_uri_override)) > 0
+    condition     = try(length(trimspace(var.notification_image_uri_override)) > 0, var.notification_image_uri_override == null)
     error_message = "notification_image_uri_override must be null or a non-empty image URI."
   }
 }
