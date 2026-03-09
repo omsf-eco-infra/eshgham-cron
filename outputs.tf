@@ -1,6 +1,6 @@
 output "lambda_republished_image_uri" {
   description = "Private ECR image URI for the republished ESHGHAM lambda image."
-  value       = module.lambda_image_republish.lambda_image_uri
+  value       = module.lambda_image_republish.lambda_image_uri_with_digest
 }
 
 output "notification_republished_image_uri" {
