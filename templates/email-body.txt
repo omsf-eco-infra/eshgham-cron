@@ -19,5 +19,5 @@ Workflows ({{ total_workflow_count }}):
 {% endif %}
 {% endfor %}
 {% else %}
-No workflows reported for this status.
+No workflows reported for this result type.
 {% endif %}
