@@ -28,7 +28,12 @@ class _SilentOutputter(Outputter):
     """No-op outputter; keeps Harness quiet inside Lambda."""
 
 
-def _load_workflow_config() -> dict[str, list[str]]:
+def _load_workflow_config(filename=None) -> dict[str, list[str]]:
+    if filename is not None:
+        with open(filename, "r") as f:
+            workflow_dict = yaml.safe_load(f)
+            return workflow_dict
+
     raw = os.environ.get("ESHGHAM_WORKFLOWS_YAML")
     if not raw:
         raise ValueError("Missing ESHGHAM_WORKFLOWS_YAML env var")
@@ -67,24 +72,32 @@ def _build_result_payload(
     return result_payload
 
 
+def _do_task(logger, filename=None) -> dict[str, dict[str, Any]]:
+    workflow_dict = _load_workflow_config(filename)
+    token = get_token(None, workflow_dict)
+    gh = github.Github(token)
+
+    runner = Harness(_SilentOutputter())
+    sorted_results = runner(gh, workflow_dict)
+
+    json_ready = make_json_ready(sorted_results)
+    result_payload = _build_result_payload(json_ready)
+    logger.info(
+        "eshgham_run_summary",
+        extra={"summary": json.dumps(result_payload)},
+    )
+    return result_payload
+
+
 class EshghamCronTask(CronLambdaTask):
-    def _perform_task(self, event, context):
+    def _perform_task(
+        self,
+        event,
+        context,
+    ) -> dict[str, dict[str, Any]]:
         logger = logging.getLogger(self.__class__.__name__)
         try:
-            workflow_dict = _load_workflow_config()
-            token = get_token(None, workflow_dict)
-            gh = github.Github(token)
-
-            runner = Harness(_SilentOutputter())
-            sorted_results = runner(gh, workflow_dict)
-
-            json_ready = make_json_ready(sorted_results)
-            result_payload = _build_result_payload(json_ready)
-            logger.info(
-                "eshgham_run_summary",
-                extra={"summary": json.dumps(result_payload)},
-            )
-            return result_payload
+            return _do_task(logger, filename=None))
         except Exception as exc:
             logger.exception("eshgham_run_exception")
             error_payload = {"FAILED": [], "error": str(exc)}
@@ -97,3 +110,12 @@ class EshghamCronTask(CronLambdaTask):
 
 task = EshghamCronTask()
 handler = task.lambda_handler
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('config', help='Path to YAML config file')
+    args = parser.parse_args()
+    result = _do_task(logging.getLogger("EshghamCronTask"),
+                      filename=args.config)
+    print(json.dumps(result, indent=2))
