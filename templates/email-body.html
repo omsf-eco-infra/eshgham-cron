@@ -1,18 +1,28 @@
 <html>
   <body>
     <h2>ESHGHAM workflow report: {{ result_type }}</h2>
-    {% if workflows %}
-    <p>Workflows ({{ workflows | length }}):</p>
+    {% if error is defined and error %}
+    <p><strong>Error:</strong> {{ error }}</p>
+    {% endif %}
+
+    {% set total_workflow_count = (FAILED | default([]) | length) + (INACTIVATED | default([]) | length) + (REENABLED | default([]) | length) + (REACTIVATED | default([]) | length) + (NO_SCHEDULED_RUNS | default([]) | length) + (OK | default([]) | length) %}
+    {% if total_workflow_count %}
+    <p>Workflows ({{ total_workflow_count }}):</p>
+    {% for status_name, status_workflows in [("FAILED", FAILED | default([])), ("INACTIVATED", INACTIVATED | default([])), ("REENABLED", REENABLED | default([])), ("REACTIVATED", REACTIVATED | default([])), ("NO_SCHEDULED_RUNS", NO_SCHEDULED_RUNS | default([])), ("OK", OK | default([]))] %}
+    {% if status_workflows %}
+    <h3>{{ status_name }} ({{ status_workflows | length }})</h3>
     <ul>
-      {% for workflow in workflows %}
+      {% for workflow in status_workflows %}
       <li>
         <strong>{{ workflow.repo }}</strong> :: {{ workflow.workflow_name }}<br />
         <a href="{{ workflow.url }}">{{ workflow.url }}</a>
       </li>
       {% endfor %}
     </ul>
+    {% endif %}
+    {% endfor %}
     {% else %}
-    <p>No workflows reported for this status.</p>
+    <p>No workflows reported for this result type.</p>
     {% endif %}
   </body>
 </html>

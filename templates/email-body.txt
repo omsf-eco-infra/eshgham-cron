@@ -1,11 +1,23 @@
 ESHGHAM workflow report: {{ result_type }}
 
-{% if workflows %}
-Workflows ({{ workflows | length }}):
-{% for workflow in workflows -%}
+{% if error is defined and error %}
+Error: {{ error }}
+
+{% endif %}
+
+{% set total_workflow_count = (FAILED | default([]) | length) + (INACTIVATED | default([]) | length) + (REENABLED | default([]) | length) + (REACTIVATED | default([]) | length) + (NO_SCHEDULED_RUNS | default([]) | length) + (OK | default([]) | length) %}
+{% if total_workflow_count %}
+Workflows ({{ total_workflow_count }}):
+{% for status_name, status_workflows in [("FAILED", FAILED | default([])), ("INACTIVATED", INACTIVATED | default([])), ("REENABLED", REENABLED | default([])), ("REACTIVATED", REACTIVATED | default([])), ("NO_SCHEDULED_RUNS", NO_SCHEDULED_RUNS | default([])), ("OK", OK | default([]))] -%}
+{% if status_workflows %}
+
+{{ status_name }} ({{ status_workflows | length }}):
+{% for workflow in status_workflows -%}
 - {{ workflow.repo }} :: {{ workflow.workflow_name }}
   {{ workflow.url }}
 {% endfor %}
+{% endif %}
+{% endfor %}
 {% else %}
-No workflows reported for this status.
+No workflows reported for this result type.
 {% endif %}
