@@ -32,7 +32,11 @@ def _load_workflow_config(filename=None) -> dict[str, list[str]]:
     if filename is not None:
         with open(filename, "r") as f:
             workflow_dict = yaml.safe_load(f)
-            return workflow_dict
+        if not isinstance(workflow_dict, dict):
+            raise ValueError(
+                f"Workflow config file {filename!r} must parse to a mapping"
+            )
+        return workflow_dict
 
     raw = os.environ.get("ESHGHAM_WORKFLOWS_YAML")
     if not raw:
