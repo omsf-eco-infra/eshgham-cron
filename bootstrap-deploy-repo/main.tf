@@ -1,6 +1,7 @@
 locals {
-  default_github_actions_secrets = {
-    TF_VAR_gh_token = var.gh_token
+  required_github_actions_secrets = {
+    TF_VAR_gh_token     = var.gh_token
+    AWS_DEPLOY_ROLE_ARN = module.workflow_oidc_role.role_arn
   }
   default_permission_sets = toset([])
 
@@ -19,14 +20,11 @@ locals {
   github_repository_name   = local.github_repository_parts[1]
   github_subjects          = ["repo:${var.github_repository}:ref:${var.github_ref}"]
   github_job_workflow_refs = ["${var.github_repository}/.github/workflows/${var.github_workflow_filename}@${var.github_ref}"]
-  github_actions_secrets = merge(
-    local.default_github_actions_secrets,
+  managed_github_actions_secrets = merge(
     var.github_actions_secrets,
-    {
-      AWS_DEPLOY_ROLE_ARN = module.workflow_oidc_role.role_arn
-    }
+    local.required_github_actions_secrets
   )
-  github_actions_secret_keys = toset(keys(nonsensitive(local.github_actions_secrets)))
+  managed_github_actions_secret_keys = toset(keys(nonsensitive(local.managed_github_actions_secrets)))
   github_oidc_provider_arn = coalesce(
     var.github_oidc_provider_arn,
     "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/token.actions.githubusercontent.com"
@@ -62,10 +60,10 @@ module "workflow_oidc_role" {
   tags                           = var.tags
 }
 
-resource "github_actions_secret" "user_defined" {
-  for_each = local.github_actions_secret_keys
+resource "github_actions_secret" "managed" {
+  for_each = local.managed_github_actions_secret_keys
 
   repository      = local.github_repository_name
   secret_name     = each.value
-  plaintext_value = local.github_actions_secrets[each.value]
+  plaintext_value = local.managed_github_actions_secrets[each.value]
 }
