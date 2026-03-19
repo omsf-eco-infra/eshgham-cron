@@ -20,7 +20,7 @@ Deployer permissions are prefix-scoped; default `allowed_resource_name_prefixes 
 
 Useful defaults in this module:
 
-- `role_name = "eshgham-cron-deployer"`
+- `role_name = "eshgham-cron-github-deployer"`
 - `github_ref = "refs/heads/main"`
 - `github_workflow_filename = "deploy.yaml"`
 - `github_oidc_provider_arn = null` (auto-resolves to the current account OIDC provider ARN)
