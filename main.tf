@@ -60,11 +60,11 @@ module "notification_image_republish" {
 module "cloud_cron" {
   source = "git::https://github.com/omsf/lambdacron.git"
 
-  aws_region        = var.aws_region
-  lambda_image_uri    = module.lambda_image_republish.lambda_image_uri_with_digest
-  schedule_expression = var.schedule_expression
-  topic_name          = var.topic_name
-  fifo_topic          = var.fifo_topic
+  aws_region                  = var.aws_region
+  lambda_image_uri            = module.lambda_image_republish.lambda_image_uri_with_digest
+  schedule_expression         = var.schedule_expression
+  topic_name                  = var.topic_name
+  fifo_topic                  = var.fifo_topic
   content_based_deduplication = var.content_based_deduplication
 
   lambda_env      = local.lambda_env
@@ -109,6 +109,7 @@ module "print_notification" {
   result_types     = var.email_result_types
   fifo_queue_name  = "${trimsuffix(var.email_fifo_queue_name, ".fifo")}-print.fifo"
   lambda_image_uri = local.notification_lambda_image_uri
+  lambda_name      = var.print_lambda_name
   template_file    = local.email_text_template_file
 
   timeout     = var.email_timeout

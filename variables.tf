@@ -207,6 +207,12 @@ variable "email_lambda_name" {
   default     = "eshgham-email-notifier"
 }
 
+variable "print_lambda_name" {
+  description = "Optional name for the print notification Lambda."
+  type        = string
+  default     = "eshgham-print-notification"
+}
+
 variable "email_timeout" {
   description = "Email notifier Lambda timeout in seconds."
   type        = number
