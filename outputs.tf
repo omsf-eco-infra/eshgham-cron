@@ -4,12 +4,12 @@ output "lambda_republished_image_uri" {
 }
 
 output "notification_republished_image_uri" {
-  description = "Private ECR image URI for the republished notification image (null when notification_image_uri_override is used)."
-  value       = local.use_notification_image_override ? null : module.notification_image_republish[0].lambda_image_uri
+  description = "Private ECR image URI with digest for the republished notification image (null when notification_image_uri_override is used)."
+  value       = local.use_notification_image_override ? null : module.notification_image_republish[0].lambda_image_uri_with_digest
 }
 
 output "notification_image_uri" {
-  description = "Notification image URI used by notification lambdas (republished image or notification_image_uri_override)."
+  description = "Notification image URI used by notification lambdas (republished image with digest or notification_image_uri_override)."
   value       = local.notification_lambda_image_uri
 }
 
