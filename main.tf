@@ -3,7 +3,7 @@ locals {
   enable_email_notification           = length(var.email_recipients) > 0
   notification_image_uri_override     = var.notification_image_uri_override == null ? null : trimspace(var.notification_image_uri_override)
   use_notification_image_override     = local.notification_image_uri_override != null
-  notification_lambda_image_uri       = local.use_notification_image_override ? local.notification_image_uri_override : module.notification_image_republish[0].lambda_image_uri
+  notification_lambda_image_uri       = local.use_notification_image_override ? local.notification_image_uri_override : module.notification_image_republish[0].lambda_image_uri_with_digest
   default_email_subject_template_file = "${path.module}/templates/email-subject.txt"
   default_email_text_template_file    = "${path.module}/templates/email-body.txt"
   default_email_html_template_file    = "${path.module}/templates/email-body.html"
