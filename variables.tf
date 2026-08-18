@@ -1,8 +1,3 @@
-variable "aws_region" {
-  description = "AWS region for private ECR, Lambda, and SNS resources."
-  type        = string
-}
-
 variable "schedule_expression" {
   description = "EventBridge schedule expression."
   type        = string
